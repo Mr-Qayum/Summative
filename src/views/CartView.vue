@@ -1,7 +1,7 @@
 <script setup>
 import { useStore } from "../store/index.js";
-
 const store = useStore();
+console.log(store.cart);
 </script>
 
 <template>

@@ -1,14 +1,17 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { auth } from "../firebase/index";
+import { useStore } from "../store";
+import { auth, firestore } from "../firebase";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
 } from "firebase/auth";
+import { getDoc, doc } from "@firebase/firestore";
 
+const store = useStore();
 const router = useRouter();
 const email = ref("");
 const passwordOne = ref("");
@@ -20,23 +23,35 @@ const registerViaEmail = async () => {
     return;
   }
 
-  await createUserWithEmailAndPassword(auth, email.value, passwordOne.value);
-
+  const { user } = await createUserWithEmailAndPassword(
+    auth,
+    email.value,
+    passwordOne.value
+  );
+  store.user = user;
   router.push("/purchase");
 };
 
 const loginViaEmail = async () => {
   try {
-    await signInWithEmailAndPassword(auth, email.value, passwordOne.value);
+    const { user } = await signInWithEmailAndPassword(
+      auth,
+      email.value,
+      passwordOne.value
+    );
+    store.user = user;
     router.push("/purchase");
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 };
 
 const registerViaGoogle = async () => {
   const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
+  const { user } = await signInWithPopup(auth, provider);
+  store.user = user;
+  const { cart } = (await getDoc(doc(firestore, "carts", user.email))).data();
+  store.cart = cart;
   router.push("/purchase");
 };
 </script>
